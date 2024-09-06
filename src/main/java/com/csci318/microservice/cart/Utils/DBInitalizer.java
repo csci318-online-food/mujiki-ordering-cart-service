@@ -16,8 +16,7 @@ public class DBInitalizer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        if (cartRepository.count() == 0) {
-            throw new org.apache.commons.lang3.NotImplementedException();
-        }
+        // if (cartRepository.count() == 0) {
+        // }
     }
 }
