@@ -1,0 +1,6 @@
+spring:
+  profiles: dev
+  server:
+    port: 83
+  cart-service:
+    url: http://localhost:83
