@@ -14,28 +14,24 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "cart")
-public class Cart {
-    /*/
-     * Rules of the cart:
-     * Cart can add items and update price
-     * If add any item from another restaurant, the cart quantity and price will be clear and update that item from new restaurant in
-     * If Cart is process to ordered, the cart quantity and price will be clear
-     * And then cart-item will be process to ordered and save to order table
-     */
+@Table(name = "cart_item")
+public class CartItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @Column(name = "cart_id")
+    private UUID cartId;
 
-    @Column(name = "total_price")
-    private Double totalPrice;
+    @Column(name = "item_id")
+    private UUID itemId;
 
+    @Column(name = "quantity")
+    private int quantity;
 
-    @Column(name = "is-ordered")
-    private boolean isOrdered = false;
+    @Column(name = "price")
+    private Double price;
 
     @Column(name = "create_at")
     private Timestamp createAt;

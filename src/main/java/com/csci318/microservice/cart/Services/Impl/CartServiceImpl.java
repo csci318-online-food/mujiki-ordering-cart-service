@@ -24,4 +24,12 @@ public class CartServiceImpl implements CartService {
         this.cartRepository = cartRepository;
         this.eventPublisher = eventPublisher;
     }
+
+    // USE CASE: ADD ITEM TO CART
+    // STEP 1: Create Cart object
+    // STEP 2: Add item to cart
+//    public CartDTOResponse createCart(Cart cart) {
+//        return cartRepository.save(cart);
+//    }
+
 }
