@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -27,15 +28,14 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId; // User ID reference
+
+    @Column(name = "restaurant_id")
+    private UUID restaurantId; // Restaurant ID reference
 
     @Column(name = "total_price")
-    private Double totalPrice;
-
-
-    @Column(name = "is-ordered")
-    private boolean isOrdered = false;
+    private Double totalPrice = 0.0;
 
     @Column(name = "create_at")
     private Timestamp createAt;
@@ -43,9 +43,28 @@ public class Cart {
     @Column(name = "modify_at")
     private Timestamp modifyAt;
 
-    @Column(name = "modify_by")
+    @Column(name = "modify_by", length = 64)
     private String modifyBy;
 
-    @Column(name = "create_by")
+    @Column(name = "create_by", length = 64)
     private String createBy;
+
+    // Add item to cart and update total price
+    public void addItem(CartItem item) {
+        if (restaurantId == null || restaurantId.equals(item.getRestaurantId())) {
+            restaurantId = item.getRestaurantId(); // Set restaurant if not already set
+            totalPrice += item.getPrice() * item.getQuantity();
+        } else {
+            // Clear cart if the restaurant is different
+            clearCart();
+            restaurantId = item.getRestaurantId();
+            totalPrice = item.getPrice() * item.getQuantity();
+        }
+    }
+
+    // Clear the cart
+    public void clearCart() {
+        restaurantId = null;
+        totalPrice = 0.0;
+    }
 }

@@ -29,6 +29,10 @@ address:
   url:
     service: http://localhost:86/api/address
 
+item:
+  url:
+    service: http://localhost:85/api/items
+
 
 # Server Configuration
 server:
