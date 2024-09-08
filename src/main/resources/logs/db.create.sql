@@ -1,6 +1,6 @@
 CREATE TABLE cart (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL,
+    user_id UUID UNIQUE,
     restaurant_id UUID,
     total_price DOUBLE PRECISION DEFAULT 0.0,
     create_at TIMESTAMP,

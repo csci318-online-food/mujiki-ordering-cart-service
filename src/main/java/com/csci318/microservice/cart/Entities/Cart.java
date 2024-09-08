@@ -28,7 +28,7 @@ public class Cart {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", unique = true)
     private UUID userId; // User ID reference
 
     @Column(name = "restaurant_id")
