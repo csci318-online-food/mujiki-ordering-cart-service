@@ -219,8 +219,9 @@ public class CartServiceImpl implements CartService {
                     log.error("Failed to process cart items to order", e);
                     throw new RuntimeException("Failed to process cart items to order: " + e.getMessage());
                 }
+                Order orderReturned = restTemplate.getForObject(ORDER_URL + "/" + order.getId(), Order.class);
 
-                return order;
+                return orderReturned;
             } else {
                 throw new RuntimeException("Payment failed: insufficient balance");
             }
