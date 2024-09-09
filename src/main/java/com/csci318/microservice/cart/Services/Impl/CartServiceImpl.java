@@ -6,19 +6,31 @@ import com.csci318.microservice.cart.DTOs.CartItemDTORequest;
 import com.csci318.microservice.cart.Entities.Cart;
 import com.csci318.microservice.cart.Entities.CartItem;
 import com.csci318.microservice.cart.Entities.Relation.Item;
+import com.csci318.microservice.cart.Entities.Relation.Order;
+import com.csci318.microservice.cart.Entities.Relation.Payment;
+import com.csci318.microservice.cart.Exceptions.ControllerExceptionHandler.DataAccessException;
 import com.csci318.microservice.cart.Mappers.CartItemMapper;
 import com.csci318.microservice.cart.Mappers.CartMapper;
 import com.csci318.microservice.cart.Repositories.CartItemRepository;
 import com.csci318.microservice.cart.Repositories.CartRepository;
 import com.csci318.microservice.cart.Services.CartService;
+import org.hibernate.ObjectNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,6 +39,14 @@ public class CartServiceImpl implements CartService {
 
     @Value("${item.url.service}")
     private String ITEM_URL;
+
+
+    @Value("${payment.url.service}")
+    private String PAYMENT_URL;
+
+    @Value("${order.url.service}")
+    private String ORDER_URL;
+
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final CartMapper cartMapper;
@@ -112,8 +132,137 @@ public class CartServiceImpl implements CartService {
                 .sum();
         cart.setTotalPrice(totalPrice);
 
-        // Save updated cart
-
         return cartMapper.toDtos(cart);
     }
+
+
+
+    /*
+     * Workflow to create an order from the cart.
+     * Do the payment with the current cart total price.
+     * Create an order with the cart items if the payment is successful (Balance >= total price).
+     * If not successful, throw an exception.
+     * cartId in cartItem will be set to null and orderId will be set to the order ID.
+     */
+    public Order createOrder(UUID cartId, UUID paymentId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
+        double totalPrice = cart.getTotalPrice();
+
+        try {
+            List<Payment> payments = getAllPaymentsFromUser(cart.getUserId());
+
+            Payment payment = payments.stream()
+                    .filter(p -> p.getId().equals(paymentId))
+                    .findFirst()
+                    .orElseThrow(() -> new ObjectNotFoundException(Payment.class, "Payment not found with ID: " + paymentId));
+
+            if (payment.getBalance() >= totalPrice) {
+                // Create an order
+                Order order = new Order();
+                order.setUserId(cart.getUserId());
+                order.setRestaurantId(cart.getRestaurantId());
+                order.setTotalPrice(totalPrice);
+                order.setStatus("CONFIRMED");
+
+                try {
+                    // Attempt to create the order via the order service
+                    this.restTemplate.postForObject(ORDER_URL + "/create-order", order, Order.class);
+                    log.info("Order created: " + order);
+                } catch (HttpClientErrorException.Forbidden e) {
+                    log.error("Access to the order service is forbidden", e);
+                    throw new RuntimeException("Access to the order service is forbidden: " + e.getMessage());
+                } catch (HttpServerErrorException.InternalServerError e) {
+                    log.error("Internal server error occurred while creating order", e);
+                    throw new RuntimeException("Internal server error occurred while creating order: " + e.getMessage());
+                } catch (RestClientException e) {
+                    log.error("Error occurred while communicating with the order service", e);
+                    throw new RuntimeException("Error occurred while communicating with the order service: " + e.getMessage());
+                }
+
+                // Update cart information
+                try {
+                    cart.setTotalPrice(0.0);
+                    cart.setRestaurantId(null);
+                    cartRepository.save(cart);
+                } catch (DataAccessException e) {
+                    log.error("Failed to update cart in the database", e);
+                    throw new RuntimeException("Failed to update cart: " + e.getMessage());
+                }
+
+                // Update the payment balance
+                try {
+                    payment.setBalance(payment.getBalance() - totalPrice);
+                    updatePaymentBalance(payment, paymentId);
+                    log.info("Payment balance updated successfully");
+                } catch (HttpClientErrorException.Forbidden e) {
+                    log.error("Access to the payment service is forbidden", e);
+                    throw new RuntimeException("Access to the payment service is forbidden: " + e.getMessage());
+                } catch (HttpServerErrorException.InternalServerError e) {
+                    log.error("Internal server error occurred while updating payment balance. Status Code: " + e.getStatusCode() +
+                            ", Response Body: " + e.getResponseBodyAsString(), e);
+                    throw new RuntimeException("Internal server error occurred while updating payment balance: " + e.getResponseBodyAsString());
+                } catch (RestClientException e) {
+                    log.error("Error occurred while communicating with the payment service", e);
+                    throw new RuntimeException("Error occurred while communicating with the payment service: " + e.getMessage());
+                }
+
+                // Process cart items to order
+                try {
+                    List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
+                    for (CartItem cartItem : cartItems) {
+                        cartItem.processToOrder(order.getId());
+                        cartItem.setCartId(null);
+                        cartItemRepository.save(cartItem);
+                    }
+                } catch (DataAccessException e) {
+                    log.error("Failed to process cart items to order", e);
+                    throw new RuntimeException("Failed to process cart items to order: " + e.getMessage());
+                }
+
+                return order;
+            } else {
+                throw new RuntimeException("Payment failed: insufficient balance");
+            }
+        } catch (HttpClientErrorException.Forbidden e) {
+            log.error("Access to the payment service is forbidden", e);
+            throw new RuntimeException("Access to the payment service is forbidden: " + e.getMessage());
+        } catch (IllegalArgumentException | ObjectNotFoundException e) {
+            log.error("Validation error: " + e.getMessage(), e);
+            throw new RuntimeException("Validation error: " + e.getMessage());
+        } catch (RestClientException e) {
+            log.error("Error occurred while communicating with external services", e);
+            throw new RuntimeException("Error occurred while communicating with external services: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("An unexpected error occurred", e);
+            throw new RuntimeException("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+
+
+    public List<Payment> getAllPaymentsFromUser(UUID userId) {
+        String url = PAYMENT_URL + "/user/" + userId;
+        ResponseEntity<List<Payment>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+        return response.getBody();
+    }
+
+    public Payment updatePaymentBalance(Payment paymentDTORequest, UUID paymentId) {
+        String url = PAYMENT_URL + "/update-balance/" + paymentId;
+        HttpEntity<Payment> requestEntity = new HttpEntity<>(paymentDTORequest);
+        try {
+            ResponseEntity<Payment> responseEntity = restTemplate.exchange(url, HttpMethod.PUT, requestEntity, Payment.class);
+            return responseEntity.getBody();
+        } catch (Exception e) {
+            log.error("Error occurred while updating payment balance", e);
+            throw new RuntimeException("Error occurred while updating payment balance: " + e.getMessage(), e);
+        }
+    }
+
 }

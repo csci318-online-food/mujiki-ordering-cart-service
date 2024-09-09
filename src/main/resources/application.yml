@@ -10,7 +10,6 @@ spring:
     url: jdbc:h2:mem:mujiki_cart
     username: mujiki_cart
     password: nothing
-
   jpa:
     hibernate:
       ddl-auto: none
@@ -32,6 +31,14 @@ address:
 item:
   url:
     service: http://localhost:85/api/items
+
+payment:
+  url:
+    service: http://localhost:87/api/payment
+
+order:
+  url:
+    service: http://localhost:88/api/order
 
 
 # Server Configuration
