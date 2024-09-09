@@ -26,19 +26,19 @@ api:
 
 address:
   url:
-    service: http://localhost:86/api/address
+    service: http://localhost:8086/api/address
 
 item:
   url:
-    service: http://localhost:85/api/items
+    service: http://localhost:8085/api/items
 
 payment:
   url:
-    service: http://localhost:87/api/payment
+    service: http://localhost:8087/api/payment
 
 order:
   url:
-    service: http://localhost:88/api/order
+    service: http://localhost:8088/api/order
 
 
 # Server Configuration
@@ -46,7 +46,7 @@ server:
   error:
     whitelabel:
       enabled: false
-  port: 83
+  port: 8083
 
 
 
