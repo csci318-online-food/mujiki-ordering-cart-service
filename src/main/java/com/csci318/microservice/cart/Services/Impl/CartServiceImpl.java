@@ -30,6 +30,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -160,9 +161,11 @@ public class CartServiceImpl implements CartService {
             if (payment.getBalance() >= totalPrice) {
                 // Create an order
                 Order order = new Order();
+                order.setId(UUID.randomUUID());
                 order.setUserId(cart.getUserId());
                 order.setRestaurantId(cart.getRestaurantId());
                 order.setTotalPrice(totalPrice);
+                order.setOrderTime(LocalDateTime.now());
                 order.setStatus("CONFIRMED");
 
                 try {
@@ -219,9 +222,21 @@ public class CartServiceImpl implements CartService {
                     log.error("Failed to process cart items to order", e);
                     throw new RuntimeException("Failed to process cart items to order: " + e.getMessage());
                 }
-                Order orderReturned = restTemplate.getForObject(ORDER_URL + "/" + order.getId(), Order.class);
-
-                return orderReturned;
+                try {
+                    // Retrieve the order from the order service
+//                    Order orderReturned = restTemplate.getForObject(ORDER_URL + "/" + order.getId(), Order.class);
+//                    log.info("Order returned: " + orderReturned);
+                    return order;
+                } catch (HttpClientErrorException.Forbidden e) {
+                    log.error("Access to the order service is forbidden", e);
+                    throw new RuntimeException("Access to the order service is forbidden: " + e.getMessage());
+                } catch (HttpServerErrorException.InternalServerError e) {
+                    log.error("Internal server error occurred while retrieving order", e);
+                    throw new RuntimeException("Internal server error occurred while retrieving order: " + e.getMessage());
+                } catch (RestClientException e) {
+                    log.error("Error occurred while communicating with the order service", e);
+                    throw new RuntimeException("Error occurred while communicating with the order service: " + e.getMessage());
+                }
             } else {
                 throw new RuntimeException("Payment failed: insufficient balance");
             }

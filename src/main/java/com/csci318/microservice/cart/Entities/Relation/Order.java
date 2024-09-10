@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -19,5 +21,5 @@ public class Order {
     private UUID restaurantId;
     private Double totalPrice;
     private String status; // "CONFIRMED", "CANCELLED", "COMPLETED"
-    private Timestamp orderTime;
+    private LocalDateTime orderTime;
 }
