@@ -24,10 +24,6 @@ api:
   endpoint:
     base-url: /api
 
-address:
-  url:
-    service: http://localhost:8086/api/address
-
 item:
   url:
     service: http://localhost:8085/api/items
