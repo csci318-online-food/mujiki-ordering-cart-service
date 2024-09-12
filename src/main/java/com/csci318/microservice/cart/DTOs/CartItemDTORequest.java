@@ -20,7 +20,5 @@ public class CartItemDTORequest {
 
     private UUID itemId; // The ID of the item being added to the cart
 
-    private int quantity; // Quantity of the item being added
-
     private Double price; // Price of the item
 }

@@ -85,6 +85,7 @@ public class CartServiceImpl implements CartService {
      * @return Response DTO of the updated cart.
      * @throws IllegalArgumentException if the cart does not exist.
      */
+
     @Transactional
     public CartDTOResponse addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest) {
         Cart cart = this.cartRepository.findById(cartId)
@@ -114,16 +115,16 @@ public class CartServiceImpl implements CartService {
 
         if (existingCartItem != null) {
             // Update the quantity and price of the existing item
-            existingCartItem.setQuantity(existingCartItem.getQuantity() + cartItemRequest.getQuantity());
+            existingCartItem.setQuantity(existingCartItem.getQuantity() + 1);
             existingCartItem.setPrice(existingCartItem.getPrice() + item.getPrice());
             cartItemRepository.save(existingCartItem);
         } else {
             // Add new item to the cart
             CartItem newCartItem = cartItemMapper.toEntities(cartItemRequest);
             newCartItem.setCartId(cartId);
-            newCartItem.setPrice(item.getPrice() * cartItemRequest.getQuantity());
+            newCartItem.setPrice(item.getPrice() * newCartItem.getQuantity());
             newCartItem.setOrderId(null); // Order ID is null as the item is not ordered yet
-            newCartItem.setQuantity(cartItemRequest.getQuantity());
+            newCartItem.setQuantity(newCartItem.getQuantity() + 1);
             cartItemRepository.save(newCartItem);
         }
 
@@ -223,9 +224,9 @@ public class CartServiceImpl implements CartService {
                     throw new RuntimeException("Failed to process cart items to order: " + e.getMessage());
                 }
                 try {
-                    // Retrieve the order from the order service
-//                    Order orderReturned = restTemplate.getForObject(ORDER_URL + "/" + order.getId(), Order.class);
-//                    log.info("Order returned: " + orderReturned);
+                // Retrieve the order from the order service
+                    Order orderReturned = restTemplate.getForObject(ORDER_URL + "/" + order.getId(), Order.class);
+                    log.info("Order returned: " + orderReturned);
                     return order;
                 } catch (HttpClientErrorException.Forbidden e) {
                     log.error("Access to the order service is forbidden", e);
