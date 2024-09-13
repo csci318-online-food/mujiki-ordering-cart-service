@@ -89,7 +89,7 @@ public class CartServiceImpl implements CartService {
      */
 
     @Transactional
-    public CartDTOResponse addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest) {
+    public Cart addItemToCart(UUID cartId, CartItem cartItemRequest) {
         Cart cart = this.cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
 
@@ -122,11 +122,10 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(existingCartItem);
         } else {
             // Add new item to the cart
-            CartItem newCartItem = cartItemMapper.toEntities(cartItemRequest);
+            CartItem newCartItem = new CartItem();
             newCartItem.setCartId(cartId);
-            newCartItem.setPrice(item.getPrice() * newCartItem.getQuantity());
-            newCartItem.setOrderId(null); // Order ID is null as the item is not ordered yet
             newCartItem.setQuantity(newCartItem.getQuantity() + 1);
+            newCartItem.setPrice(item.getPrice() * newCartItem.getQuantity());
             cartItemRepository.save(newCartItem);
         }
 
@@ -136,10 +135,8 @@ public class CartServiceImpl implements CartService {
                 .sum();
         cart.setTotalPrice(totalPrice);
 
-        return cartMapper.toDtos(cart);
+        return cart;
     }
-
-
 
     /*
      * Workflow to create an order from the cart.

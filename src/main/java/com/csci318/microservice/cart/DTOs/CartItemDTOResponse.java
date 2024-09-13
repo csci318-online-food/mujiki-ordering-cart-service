@@ -15,8 +15,6 @@ public class CartItemDTOResponse {
 
     private UUID cartId;
 
-    private UUID orderId;
-
     private UUID restaurantId;
 
     private UUID itemId;

@@ -29,8 +29,6 @@ public class CartMapper implements Mapper<Cart, CartDTOResponse, CartDTORequest>
         cart.setUserId(dto.getUserId());
 //        cart.setRestaurantId(dto.getRestaurantId());
         cart.setTotalPrice(0.0); // Initialize total price
-        cart.setCreateBy("system");
-        cart.setModifyBy("system");
         return cart;
     }
 
@@ -49,7 +47,6 @@ public class CartMapper implements Mapper<Cart, CartDTOResponse, CartDTORequest>
         return new CartItemDTOResponse(
                 cartItem.getId(),
                 cartItem.getCartId(),
-                cartItem.getOrderId(),
                 cartItem.getRestaurantId(),
                 cartItem.getItemId(),
                 cartItem.getQuantity(),

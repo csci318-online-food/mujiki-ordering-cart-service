@@ -16,7 +16,6 @@ public class CartItemMapper implements Mapper<CartItem, CartItemDTOResponse, Car
         return new CartItemDTOResponse(
                 entity.getId(),
                 entity.getCartId(),
-                entity.getOrderId(),
                 entity.getRestaurantId(),
                 entity.getItemId(),
                 entity.getQuantity(),
@@ -27,12 +26,10 @@ public class CartItemMapper implements Mapper<CartItem, CartItemDTOResponse, Car
     @Override
     public CartItem toEntities(CartItemDTORequest dto) {
         CartItem cartItem = new CartItem();
-        cartItem.setOrderId(dto.getOrderId());
         cartItem.setRestaurantId(dto.getRestaurantId());
         cartItem.setItemId(dto.getItemId());
         cartItem.setPrice(dto.getPrice());
-        cartItem.setCreateBy("system");
-        cartItem.setModifyBy("system");
+
         return cartItem;
     }
 
