@@ -90,7 +90,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public Cart addItemToCart(UUID cartId, CartItem cartItemRequest) {
+    public Cart addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
 
@@ -103,7 +103,7 @@ public class CartServiceImpl implements CartService {
         CartItem existingCartItem = cartItemRepository.findByCartIdAndItemId(cartId, item.getId());
 
         if (existingCartItem != null) {
-            // Update the quantity and price of the existing item
+            // Update the quantity and price in CartItem entity
             existingCartItem.increaseQuantity(item.getPrice());
             cartItemRepository.save(existingCartItem);
         } else {
@@ -112,12 +112,13 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(newCartItem);
         }
 
-        // Recalculate total price
-        cart.updateTotalPrice(cartItemRepository);
+        // Recalculate total price in the Cart entity
+        cart.calculateTotalPrice(cartItemRepository);
         cartRepository.save(cart);
 
         return cart;
     }
+
 
 
     /*

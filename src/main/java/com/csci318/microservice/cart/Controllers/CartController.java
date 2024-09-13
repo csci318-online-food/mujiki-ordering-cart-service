@@ -34,7 +34,7 @@ public class CartController {
 
     // Domain Service
     @PostMapping("/{cartId}/items")
-    public ResponseEntity<Cart> addItemToCart(@PathVariable UUID cartId, @RequestBody CartItem cartItemRequest) {
+    public ResponseEntity<Cart> addItemToCart(@PathVariable UUID cartId, @RequestBody CartItemDTORequest cartItemRequest) {
         Cart cartDTOResponse = cartService.addItemToCart(cartId, cartItemRequest);
         return ResponseEntity.ok(cartDTOResponse);
     }

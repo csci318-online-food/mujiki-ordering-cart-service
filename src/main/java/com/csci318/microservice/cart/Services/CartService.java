@@ -18,7 +18,7 @@ import java.util.UUID;
 public interface CartService {
     CartDTOResponse createCart(CartDTORequest cartDTORequest);
 //    CartDTOResponse addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest);
-    Cart addItemToCart(UUID cartId, CartItem cartItemRequest);
+Cart addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest);
     Order createOrder (UUID cartId, UUID paymentId);
     List<Payment> getAllPaymentsFromUser(UUID userId);
 }

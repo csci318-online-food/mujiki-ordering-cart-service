@@ -40,16 +40,18 @@ public class CartItem {
     @Column(name = "price")
     private Double price; // Price of the item at the time of adding to the cart
 
-    // Update quantity when adding the same item
+
     public void increaseQuantity(double itemPrice) {
         this.quantity += 1;
         this.price += itemPrice;
     }
 
+    // Create a new CartItem instance for a new item
     public static CartItem createNew(UUID cartId, Item item) {
         CartItem cartItem = new CartItem();
         cartItem.setCartId(cartId);
         cartItem.setItemId(item.getId());
+        cartItem.setRestaurantId(item.getRestaurantId());
         cartItem.setQuantity(1);
         cartItem.setPrice(item.getPrice());
         return cartItem;
