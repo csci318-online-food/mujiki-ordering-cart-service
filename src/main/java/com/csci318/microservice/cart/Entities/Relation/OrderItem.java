@@ -1,7 +1,4 @@
 package com.csci318.microservice.cart.Entities.Relation;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -15,7 +15,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Order {
-
     private UUID id;
     private UUID userId;
     private UUID restaurantId;

@@ -148,6 +148,7 @@ public class CartServiceImpl implements CartService {
      * If not successful, throw an exception.
      * cartId in cartItem will be set to null and orderId will be set to the order ID.
      */
+
     public Order createOrder(UUID cartId, UUID paymentId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));

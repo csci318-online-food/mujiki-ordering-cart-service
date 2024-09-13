@@ -14,7 +14,7 @@ import java.util.UUID;
 public class Payment {
     private UUID id;
     private UUID userId;
-    private String bank;
+    private String holderName;
     private String cardNumber;
     private Double balance;
 }
