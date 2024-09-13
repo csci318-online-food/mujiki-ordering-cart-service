@@ -1,6 +1,9 @@
-package com.csci318.microservice.cart.Entities;
+package com.csci318.microservice.cart.Domain.Services;
 
 import java.util.List;
+
+import com.csci318.microservice.cart.Domain.Entities.Cart;
+import com.csci318.microservice.cart.Domain.Entities.CartItem;
 
 import lombok.NoArgsConstructor;
 

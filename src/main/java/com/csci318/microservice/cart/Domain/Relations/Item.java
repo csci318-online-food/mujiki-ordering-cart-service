@@ -1,4 +1,5 @@
-package com.csci318.microservice.cart.Entities.Relation;
+package com.csci318.microservice.cart.Domain.Relations;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,11 +11,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @Getter
 @Setter
-public class OrderItem {
+public class Item {
     private UUID id;
-    private UUID orderId;
+    private String name;
     private UUID restaurantId;
-    private UUID itemId;
-    private int quantity;
-    private Double price;
+    private String description;
+    private double price;
+    private boolean availability;
 }

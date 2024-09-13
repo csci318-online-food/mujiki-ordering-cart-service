@@ -1,4 +1,4 @@
-package com.csci318.microservice.cart.Entities.Relation;
+package com.csci318.microservice.cart.Domain.Relations;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

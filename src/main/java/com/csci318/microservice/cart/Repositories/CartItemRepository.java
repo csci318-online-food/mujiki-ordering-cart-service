@@ -1,10 +1,11 @@
 package com.csci318.microservice.cart.Repositories;
 
-import com.csci318.microservice.cart.Entities.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import com.csci318.microservice.cart.Domain.Entities.CartItem;
 
 import java.util.Collection;
 import java.util.List;
