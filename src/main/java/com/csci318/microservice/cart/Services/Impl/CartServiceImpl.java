@@ -88,55 +88,37 @@ public class CartServiceImpl implements CartService {
      * @throws IllegalArgumentException if the cart does not exist.
      */
 
+    @Override
     @Transactional
     public Cart addItemToCart(UUID cartId, CartItem cartItemRequest) {
-        Cart cart = this.cartRepository.findById(cartId)
+        Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
 
-        if (cart == null) {
-            throw new IllegalArgumentException("Cart not found with ID: " + cartId);
-        }
-        cart.setRestaurantId(cartItemRequest.getRestaurantId());
-        cart = cartRepository.save(cart);
-
-        // If adding an item from a different restaurant, clear the cart (Rule)
-        if (cart.getRestaurantId() == null || !cart.getRestaurantId().equals(cartItemRequest.getRestaurantId())) {
-            cart.setRestaurantId(cartItemRequest.getRestaurantId());
-            cart.setTotalPrice(0.0);
-            // Properly clear cart items for the new restaurant
-            cartItemRepository.deleteByCartId(cartId);
-        }
+        // Handle different restaurant rule
+        cart.handleDifferentRestaurant(cartItemRequest.getRestaurantId(), cartItemRepository);
 
         Item item = restTemplate.getForObject(ITEM_URL + "/" + cartItemRequest.getItemId(), Item.class);
-        // DEBUG
-        log.info("Item: " + item);
-        log.info("Item price: " + item.getPrice());
 
         // Check if the item already exists in the cart
         CartItem existingCartItem = cartItemRepository.findByCartIdAndItemId(cartId, item.getId());
 
         if (existingCartItem != null) {
             // Update the quantity and price of the existing item
-            existingCartItem.setQuantity(existingCartItem.getQuantity() + 1);
-            existingCartItem.setPrice(existingCartItem.getPrice() + item.getPrice());
+            existingCartItem.increaseQuantity(item.getPrice());
             cartItemRepository.save(existingCartItem);
         } else {
             // Add new item to the cart
-            CartItem newCartItem = new CartItem();
-            newCartItem.setCartId(cartId);
-            newCartItem.setQuantity(newCartItem.getQuantity() + 1);
-            newCartItem.setPrice(item.getPrice() * newCartItem.getQuantity());
+            CartItem newCartItem = CartItem.createNew(cartId, item);
             cartItemRepository.save(newCartItem);
         }
 
         // Recalculate total price
-        double totalPrice = cartItemRepository.findByCartId(cartId).stream()
-                .mapToDouble(cartItem -> cartItem.getPrice() != null ? cartItem.getPrice() : 0.0)
-                .sum();
-        cart.setTotalPrice(totalPrice);
+        cart.updateTotalPrice(cartItemRepository);
+        cartRepository.save(cart);
 
         return cart;
     }
+
 
     /*
      * Workflow to create an order from the cart.

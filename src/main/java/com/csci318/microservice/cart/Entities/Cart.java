@@ -43,4 +43,22 @@ public class Cart {
 
     @Column(name = "total_price")
     private Double totalPrice = 0.0;
+
+    public void clearCartItems(CartItemRepository cartItemRepository) {
+        cartItemRepository.deleteByCartId(this.id);
+        this.totalPrice = 0.0;
+    }
+
+    public void updateTotalPrice(CartItemRepository cartItemRepository) {
+        this.totalPrice = cartItemRepository.findByCartId(this.id).stream()
+                .mapToDouble(cartItem -> cartItem.getPrice() != null ? cartItem.getPrice() : 0.0)
+                .sum();
+    }
+
+    public void handleDifferentRestaurant(UUID newRestaurantId, CartItemRepository cartItemRepository) {
+        if (this.restaurantId == null || !this.restaurantId.equals(newRestaurantId)) {
+            this.restaurantId = newRestaurantId;
+            clearCartItems(cartItemRepository);
+        }
+    }
 }
