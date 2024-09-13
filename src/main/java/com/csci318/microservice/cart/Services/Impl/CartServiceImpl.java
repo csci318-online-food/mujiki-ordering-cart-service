@@ -7,6 +7,7 @@ import com.csci318.microservice.cart.Entities.Cart;
 import com.csci318.microservice.cart.Entities.CartItem;
 import com.csci318.microservice.cart.Entities.Relation.Item;
 import com.csci318.microservice.cart.Entities.Relation.Order;
+import com.csci318.microservice.cart.Entities.Relation.OrderItem;
 import com.csci318.microservice.cart.Entities.Relation.Payment;
 import com.csci318.microservice.cart.Exceptions.ControllerExceptionHandler.DataAccessException;
 import com.csci318.microservice.cart.Mappers.CartItemMapper;
@@ -31,6 +32,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -214,10 +216,26 @@ public class CartServiceImpl implements CartService {
                 // Process cart items to order
                 try {
                     List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
+                    List<OrderItem> orderItems = new ArrayList<>();
+
                     for (CartItem cartItem : cartItems) {
-                        cartItem.processToOrder(order.getId());
-                        cartItem.setCartId(null);
-                        cartItemRepository.save(cartItem);
+                        // Process cart item to order item
+                        OrderItem orderItem = new OrderItem();
+                        orderItem.setId(UUID.randomUUID());
+                        orderItem.setOrderId(order.getId());
+                        orderItem.setRestaurantId(cartItem.getRestaurantId());
+                        orderItem.setItemId(cartItem.getItemId());
+                        orderItem.setQuantity(cartItem.getQuantity());
+                        orderItem.setPrice(cartItem.getPrice());
+
+                        // Add to order items list
+                        orderItems.add(orderItem);
+
+                        // Save order item
+                        restTemplate.postForObject(ORDER_URL + "/create-order-item", orderItem, OrderItem.class);
+
+                        // Delete cart item
+                        cartItemRepository.delete(cartItem);
                     }
                 } catch (DataAccessException e) {
                     log.error("Failed to process cart items to order", e);
@@ -226,7 +244,7 @@ public class CartServiceImpl implements CartService {
                 try {
                 // Retrieve the order from the order service
                     Order orderReturned = restTemplate.getForObject(ORDER_URL + "/" + order.getId(), Order.class);
-                    log.info("Order returned: " + orderReturned);
+                    log.info("Order returned: {}", orderReturned);
                     return order;
                 } catch (HttpClientErrorException.Forbidden e) {
                     log.error("Access to the order service is forbidden", e);
