@@ -40,7 +40,6 @@ public class CartItem {
     @Column(name = "price")
     private Double price; // Price of the item at the time of adding to the cart
 
-
     public void increaseQuantity(double itemPrice) {
         this.quantity += 1;
         this.price += itemPrice;

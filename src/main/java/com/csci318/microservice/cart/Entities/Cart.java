@@ -44,32 +44,4 @@ public class Cart {
 
     @Column(name = "total_price")
     private Double totalPrice = 0.0;
-
-    // Update the total price of the cart based on all items
-    public void calculateTotalPrice(CartItemRepository cartItemRepository) {
-        double total = 0.0;
-        List<CartItem> cartItems = cartItemRepository.findByCartId(this.id);
-
-        for (CartItem cartItem : cartItems) {
-            if (cartItem.getPrice() != null) {
-                total += cartItem.getPrice();
-            }
-        }
-
-        this.totalPrice = total;
-    }
-
-    // Handle a case where an item from a different restaurant is added
-    public void handleDifferentRestaurant(UUID newRestaurantId, CartItemRepository cartItemRepository) {
-        if (this.restaurantId == null || !this.restaurantId.equals(newRestaurantId)) {
-            this.restaurantId = newRestaurantId;
-            clearCartItems(cartItemRepository);
-        }
-    }
-
-    // Clear cart items when switching restaurants
-    public void clearCartItems(CartItemRepository cartItemRepository) {
-        cartItemRepository.deleteByCartId(this.id);
-        this.totalPrice = 0.0;
-    }
 }

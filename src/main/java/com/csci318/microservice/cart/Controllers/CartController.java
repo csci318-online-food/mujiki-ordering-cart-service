@@ -3,6 +3,7 @@ package com.csci318.microservice.cart.Controllers;
 import com.csci318.microservice.cart.DTOs.CartDTORequest;
 import com.csci318.microservice.cart.DTOs.CartDTOResponse;
 import com.csci318.microservice.cart.DTOs.CartItemDTORequest;
+import com.csci318.microservice.cart.DTOs.CartItemDTOResponse;
 import com.csci318.microservice.cart.Entities.Cart;
 import com.csci318.microservice.cart.Entities.CartItem;
 import com.csci318.microservice.cart.Entities.Relation.Order;
@@ -32,10 +33,9 @@ public class CartController {
         return ResponseEntity.ok(cartDTOResponse);
     }
 
-    // Domain Service
     @PostMapping("/{cartId}/items")
-    public ResponseEntity<Cart> addItemToCart(@PathVariable UUID cartId, @RequestBody CartItemDTORequest cartItemRequest) {
-        Cart cartDTOResponse = cartService.addItemToCart(cartId, cartItemRequest);
+    public ResponseEntity<CartDTOResponse> addItemToCart(@PathVariable UUID cartId, @RequestBody CartItemDTORequest cartItemRequest) {
+        CartDTOResponse cartDTOResponse = cartService.addItemToCart(cartId, cartItemRequest);
         return ResponseEntity.ok(cartDTOResponse);
     }
 

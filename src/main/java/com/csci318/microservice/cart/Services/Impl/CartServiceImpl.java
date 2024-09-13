@@ -5,6 +5,7 @@ import com.csci318.microservice.cart.DTOs.CartDTOResponse;
 import com.csci318.microservice.cart.DTOs.CartItemDTORequest;
 import com.csci318.microservice.cart.Entities.Cart;
 import com.csci318.microservice.cart.Entities.CartItem;
+import com.csci318.microservice.cart.Entities.CartPriceCalculator;
 import com.csci318.microservice.cart.Entities.Relation.Item;
 import com.csci318.microservice.cart.Entities.Relation.Order;
 import com.csci318.microservice.cart.Entities.Relation.OrderItem;
@@ -69,7 +70,7 @@ public class CartServiceImpl implements CartService {
     }
 
     /**
-     * Create a new cart for the user.
+     * Create a new cart for the user   .
      * @param cartDTORequest Request DTO for creating a new cart.
      * @return Response DTO of the created cart.
      */
@@ -90,12 +91,16 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
-    public Cart addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest) {
+    public CartDTOResponse addItemToCart(UUID cartId, CartItemDTORequest cartItemRequest) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
 
         // Handle different restaurant rule
-        cart.handleDifferentRestaurant(cartItemRequest.getRestaurantId(), cartItemRepository);
+        if (cart.getRestaurantId() != cartItemRequest.getRestaurantId()) {
+            cartItemRepository.deleteByCartId(cartId);
+            cart.setTotalPrice(0.0);
+            cart.setRestaurantId(cartItemRequest.getRestaurantId());
+        }
 
         Item item = restTemplate.getForObject(ITEM_URL + "/" + cartItemRequest.getItemId(), Item.class);
 
@@ -113,10 +118,11 @@ public class CartServiceImpl implements CartService {
         }
 
         // Recalculate total price in the Cart entity
-        cart.calculateTotalPrice(cartItemRepository);
+        CartPriceCalculator cartPriceCalculator = new CartPriceCalculator();
+        cartPriceCalculator.calculateTotalPrice(cart, cartItemRepository.findByCartId(cartId));
         cartRepository.save(cart);
 
-        return cart;
+        return cartMapper.toDtos(cart);
     }
 
 
@@ -213,7 +219,7 @@ public class CartServiceImpl implements CartService {
                         orderItems.add(orderItem);
 
                         // Save order item
-                        restTemplate.postForObject(ORDER_URL + "/create-order-item", orderItem, OrderItem.class);
+                        restTemplate.postForObject(ORDER_URL + "/" + order.getId() + "/add-order-item", orderItem, OrderItem.class);
 
                         // Delete cart item
                         cartItemRepository.delete(cartItem);
