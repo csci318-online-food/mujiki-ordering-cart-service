@@ -96,7 +96,8 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
 
         // Handle different restaurant rule
-        if (cart.getRestaurantId() != cartItemRequest.getRestaurantId()) {
+        UUID cartRestaurantId = cart.getRestaurantId();
+        if (cartRestaurantId == null || !cartRestaurantId.equals(cartItemRequest.getRestaurantId())) {
             cartItemRepository.deleteByCartId(cartId);
             cart.setTotalPrice(0.0);
             cart.setRestaurantId(cartItemRequest.getRestaurantId());
