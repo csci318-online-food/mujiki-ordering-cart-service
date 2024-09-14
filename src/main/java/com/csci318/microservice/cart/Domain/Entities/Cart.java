@@ -35,4 +35,12 @@ public class Cart {
 
     @Column(name = "total_price")
     private Double totalPrice = 0.0;
+
+    // Handle a case where an item from a different restaurant is added
+    public void handleDifferentRestaurant(UUID newRestaurantId, Runnable clearCart) {
+        if (this.restaurantId == null || !this.restaurantId.equals(newRestaurantId)) {
+            this.restaurantId = newRestaurantId;
+            clearCart.run();
+        }
+    }
 }

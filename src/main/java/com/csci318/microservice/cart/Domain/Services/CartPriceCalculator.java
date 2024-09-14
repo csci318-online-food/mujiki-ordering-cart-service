@@ -13,9 +13,11 @@ public class CartPriceCalculator {
     public void calculateTotalPrice(Cart cart, List<CartItem> cartItems) {
         double total = 0.0;
 
-        for (CartItem cartItem : cartItems) {
-            if (cartItem.getPrice() != null) {
-                total += cartItem.getPrice();
+        if (cartItems != null) {
+            for (CartItem cartItem : cartItems) {
+                if (cartItem.getPrice() != null) {
+                    total += cartItem.getPrice();
+                }
             }
         }
 

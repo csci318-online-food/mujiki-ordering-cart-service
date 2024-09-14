@@ -56,6 +56,7 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
     private final CartItemMapper cartItemMapper;
     private final RestTemplate restTemplate;
+    private final CartPriceCalculator cartPriceCalculator;
 
     private final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
 
@@ -67,6 +68,7 @@ public class CartServiceImpl implements CartService {
         this.cartMapper = cartMapper;
         this.cartItemMapper = cartItemMapper;
         this.restTemplate = restTemplate;
+        this.cartPriceCalculator = new CartPriceCalculator();
     }
 
     /**
@@ -96,12 +98,10 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
 
         // Handle different restaurant rule
-        UUID cartRestaurantId = cart.getRestaurantId();
-        if (cartRestaurantId == null || !cartRestaurantId.equals(cartItemRequest.getRestaurantId())) {
+        cart.handleDifferentRestaurant(cartItemRequest.getRestaurantId(), () -> {
             cartItemRepository.deleteByCartId(cartId);
-            cart.setTotalPrice(0.0);
-            cart.setRestaurantId(cartItemRequest.getRestaurantId());
-        }
+            cartPriceCalculator.calculateTotalPrice(cart, null);
+        });
 
         Item item = restTemplate.getForObject(ITEM_URL + "/" + cartItemRequest.getItemId(), Item.class);
 
@@ -119,7 +119,6 @@ public class CartServiceImpl implements CartService {
         }
 
         // Recalculate total price in the Cart entity
-        CartPriceCalculator cartPriceCalculator = new CartPriceCalculator();
         cartPriceCalculator.calculateTotalPrice(cart, cartItemRepository.findByCartId(cartId));
         cartRepository.save(cart);
 
