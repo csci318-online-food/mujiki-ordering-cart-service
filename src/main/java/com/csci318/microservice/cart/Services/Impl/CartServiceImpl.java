@@ -5,10 +5,7 @@ import com.csci318.microservice.cart.DTOs.CartDTOResponse;
 import com.csci318.microservice.cart.DTOs.CartItemDTORequest;
 import com.csci318.microservice.cart.Domain.Entities.Cart;
 import com.csci318.microservice.cart.Domain.Entities.CartItem;
-import com.csci318.microservice.cart.Domain.Relations.Item;
-import com.csci318.microservice.cart.Domain.Relations.Order;
-import com.csci318.microservice.cart.Domain.Relations.OrderItem;
-import com.csci318.microservice.cart.Domain.Relations.Payment;
+import com.csci318.microservice.cart.Domain.Relations.*;
 import com.csci318.microservice.cart.Domain.Services.CartPriceCalculator;
 import com.csci318.microservice.cart.Exceptions.ControllerExceptionHandler.DataAccessException;
 import com.csci318.microservice.cart.Mappers.CartItemMapper;
@@ -32,6 +29,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +42,14 @@ public class CartServiceImpl implements CartService {
     @Value("${item.url.service}")
     private String ITEM_URL;
 
-
     @Value("${payment.url.service}")
     private String PAYMENT_URL;
 
     @Value("${order.url.service}")
     private String ORDER_URL;
+
+    @Value("${promotion.url.service}")
+    private String PROMOTION_URL;
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -125,8 +125,6 @@ public class CartServiceImpl implements CartService {
         return cartMapper.toDtos(cart);
     }
 
-
-
     /*
      * Workflow to create an order from the cart.
      * Do the payment with the current cart total price.
@@ -135,10 +133,30 @@ public class CartServiceImpl implements CartService {
      * cartId in cartItem will be set to null and orderId will be set to the order ID.
      */
 
-    public Order createOrder(UUID cartId, UUID paymentId) {
+    public Order createOrder(UUID cartId, UUID paymentId, UUID promotionId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
         double totalPrice = cart.getTotalPrice();
+
+        // Apply Promotion after having total price from cart (TEST)
+        if (promotionId != null) {
+            try {
+                // Check the promotion id is valid
+                Promotion promotion = restTemplate.getForObject(PROMOTION_URL + "/" + promotionId, Promotion.class);
+                if (promotion.isActive() && promotion.getExpiryDate().after(new Timestamp(System.currentTimeMillis())) && promotion.getStock() > 0) {
+                    double discountAmount = promotion.getPercentage();
+                    totalPrice = totalPrice - discountAmount;
+                    cart.setTotalPrice(totalPrice);
+                    this.cartRepository.save(cart); // update the cart with the new total price
+                    restTemplate.put(PROMOTION_URL + "/apply/" + promotionId, Promotion.class);
+                } else {
+                    throw new RuntimeException("Promotion is expired, out of stock, or inactive");
+                }
+            } catch (RestClientException e) {
+                log.error("Error occurred while communicating with the promotion service", e);
+                throw new RuntimeException("Error occurred while communicating with the promotion service: " + e.getMessage());
+            }
+        }
 
         try {
             List<Payment> payments = getAllPaymentsFromUser(cart.getUserId());

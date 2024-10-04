@@ -28,6 +28,10 @@ item:
   url:
     service: http://localhost:8085/api/items
 
+promotion:
+  url:
+    service: http://localhost:8082/api/promotions
+
 payment:
   url:
     service: http://localhost:8087/api/payment
@@ -35,6 +39,7 @@ payment:
 order:
   url:
     service: http://localhost:8088/api/order
+
 
 
 # Server Configuration

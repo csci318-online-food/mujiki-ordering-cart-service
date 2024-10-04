@@ -37,8 +37,10 @@ public class CartController {
     }
 
     @PostMapping("/process-order/{cartId}")
-    public ResponseEntity<Order> processOrder(@PathVariable UUID cartId, @RequestParam(name="paymentId") UUID paymentId) {
-        Order cartDTOResponse = cartService.createOrder(cartId, paymentId);
+    public ResponseEntity<Order> processOrder(@PathVariable UUID cartId,
+                                              @RequestParam(name="paymentId") UUID paymentId,
+                                              @RequestParam(name = "promotionId") UUID promotionId) {
+        Order cartDTOResponse = cartService.createOrder(cartId, paymentId, promotionId);
         return ResponseEntity.ok(cartDTOResponse);
     }
 
