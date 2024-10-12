@@ -26,7 +26,7 @@ api:
 
 item:
   url:
-    service: http://localhost:8085/api/items
+    service: http://localhost:8082/api/item
 
 promotion:
   url:
