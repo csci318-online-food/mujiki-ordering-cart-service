@@ -1,5 +1,6 @@
 package com.csci318.microservice.cart.Services.Impl;
 
+import com.csci318.microservice.cart.Constants.OrderStatus;
 import com.csci318.microservice.cart.DTOs.CartDTORequest;
 import com.csci318.microservice.cart.DTOs.CartDTOResponse;
 import com.csci318.microservice.cart.DTOs.CartItemDTORequest;
@@ -29,11 +30,9 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -54,7 +53,6 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final CartMapper cartMapper;
-    private final CartItemMapper cartItemMapper;
     private final RestTemplate restTemplate;
     private final CartPriceCalculator cartPriceCalculator;
 
@@ -66,7 +64,6 @@ public class CartServiceImpl implements CartService {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.cartMapper = cartMapper;
-        this.cartItemMapper = cartItemMapper;
         this.restTemplate = restTemplate;
         this.cartPriceCalculator = new CartPriceCalculator();
     }
@@ -184,7 +181,7 @@ public class CartServiceImpl implements CartService {
                 order.setRestaurantId(cart.getRestaurantId());
                 order.setTotalPrice(totalPrice);
                 order.setOrderTime(LocalDateTime.now());
-                order.setStatus("CONFIRMED");
+                order.setStatus(OrderStatus.CONFIRMED);
 
                 try {
                     // Attempt to create the order via the order service

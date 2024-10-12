@@ -8,6 +8,8 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.csci318.microservice.cart.Constants.OrderStatus;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -17,6 +19,6 @@ public class Order {
     private UUID userId;
     private UUID restaurantId;
     private Double totalPrice;
-    private String status; // "CONFIRMED", "CANCELLED", "COMPLETED"
+    private OrderStatus status;
     private LocalDateTime orderTime;
 }
