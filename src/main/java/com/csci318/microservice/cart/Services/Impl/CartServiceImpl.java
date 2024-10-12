@@ -141,17 +141,21 @@ public class CartServiceImpl implements CartService {
         // Apply Promotion after having total price from cart (TEST)
         if (promotionId != null) {
             try {
-                // Check the promotion id is valid
-                Promotion promotion = restTemplate.getForObject(PROMOTION_URL + "/" + promotionId, Promotion.class);
-                if (promotion.isActive() && promotion.getExpiryDate().after(new Timestamp(System.currentTimeMillis())) && promotion.getStock() > 0) {
-                    double discountAmount = promotion.getPercentage();
-                    totalPrice = totalPrice - discountAmount;
-                    cart.setTotalPrice(totalPrice);
-                    this.cartRepository.save(cart); // update the cart with the new total price
-                    restTemplate.put(PROMOTION_URL + "/apply/" + promotionId, Promotion.class);
-                } else {
+                // Apply the promotion, if it exists.
+                Promotion promotion = restTemplate.postForObject(
+                    PROMOTION_URL + "/apply/" + promotionId,
+                    null,
+                    Promotion.class
+                );
+
+                if (promotion == null) {
                     throw new RuntimeException("Promotion is expired, out of stock, or inactive");
                 }
+
+                double discountAmount = promotion.getPercentage();
+                totalPrice = totalPrice - discountAmount;
+                cart.setTotalPrice(totalPrice);
+                this.cartRepository.save(cart); // update the cart with the new total price
             } catch (RestClientException e) {
                 log.error("Error occurred while communicating with the promotion service", e);
                 throw new RuntimeException("Error occurred while communicating with the promotion service: " + e.getMessage());

@@ -30,7 +30,7 @@ item:
 
 promotion:
   url:
-    service: http://localhost:8082/api/promotions
+    service: http://localhost:8082/api/promotion
 
 payment:
   url:
