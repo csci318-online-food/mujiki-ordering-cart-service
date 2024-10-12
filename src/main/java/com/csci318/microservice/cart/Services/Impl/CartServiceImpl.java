@@ -100,7 +100,7 @@ public class CartServiceImpl implements CartService {
         // Handle different restaurant rule
         cart.handleDifferentRestaurant(cartItemRequest.getRestaurantId(), () -> {
             cartItemRepository.deleteByCartId(cartId);
-            cartPriceCalculator.calculateTotalPrice(cart, null);
+            cartPriceCalculator.calculateTotalPrice(cart, null, null);
         });
 
         Item item = restTemplate.getForObject(ITEM_URL + "/" + cartItemRequest.getItemId(), Item.class);
@@ -119,7 +119,11 @@ public class CartServiceImpl implements CartService {
         }
 
         // Recalculate total price in the Cart entity
-        cartPriceCalculator.calculateTotalPrice(cart, cartItemRepository.findByCartId(cartId));
+        cartPriceCalculator.calculateTotalPrice(
+            cart,
+            cartItemRepository.findByCartId(cartId),
+            null
+        );
         cartRepository.save(cart);
 
         return cartMapper.toDtos(cart);
@@ -136,9 +140,9 @@ public class CartServiceImpl implements CartService {
     public Order createOrder(UUID cartId, UUID paymentId, UUID promotionId) {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Cart not found with ID: " + cartId));
-        double totalPrice = cart.getTotalPrice();
+        List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
 
-        // Apply Promotion after having total price from cart (TEST)
+        // Apply Promotion
         if (promotionId != null) {
             try {
                 // Apply the promotion, if it exists.
@@ -152,15 +156,17 @@ public class CartServiceImpl implements CartService {
                     throw new RuntimeException("Promotion is expired, out of stock, or inactive");
                 }
 
-                double discountAmount = promotion.getPercentage();
-                totalPrice = totalPrice - discountAmount;
-                cart.setTotalPrice(totalPrice);
-                this.cartRepository.save(cart); // update the cart with the new total price
+                // Recalculate total price in the Cart entity
+                cartPriceCalculator.calculateTotalPrice(cart, cartItems, promotion);
+                cartRepository.save(cart);
             } catch (RestClientException e) {
                 log.error("Error occurred while communicating with the promotion service", e);
                 throw new RuntimeException("Error occurred while communicating with the promotion service: " + e.getMessage());
             }
         }
+
+        // This is the final total price of the cart.
+        double totalPrice = cart.getTotalPrice();
 
         try {
             List<Payment> payments = getAllPaymentsFromUser(cart.getUserId());
@@ -224,7 +230,6 @@ public class CartServiceImpl implements CartService {
 
                 // Process cart items to order
                 try {
-                    List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
                     List<OrderItem> orderItems = new ArrayList<>();
 
                     for (CartItem cartItem : cartItems) {
