@@ -1,6 +1,7 @@
 package com.csci318.microservice.cart.Domain.Entities;
 
 import com.csci318.microservice.cart.Domain.Relations.Item;
+import com.csci318.microservice.cart.Domain.Relations.Restaurant;
 import com.csci318.microservice.cart.Utils.Annotations.ManyToOne;
 
 import lombok.AllArgsConstructor;
@@ -34,9 +35,11 @@ public class CartItem {
     private UUID cartId;
 
     @Column(name = "restaurant_id")
+    @ManyToOne(targetEntity = Restaurant.class)
     private UUID restaurantId;
 
     @Column(name = "item_id")
+    @ManyToOne(targetEntity = Item.class)
     private UUID itemId;
 
     @Column(name = "quantity")
