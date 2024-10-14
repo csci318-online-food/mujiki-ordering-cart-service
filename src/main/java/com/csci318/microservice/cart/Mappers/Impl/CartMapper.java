@@ -1,10 +1,9 @@
-package com.csci318.microservice.cart.Mappers;
+package com.csci318.microservice.cart.Mappers.Impl;
 
 import com.csci318.microservice.cart.DTOs.CartDTORequest;
 import com.csci318.microservice.cart.DTOs.CartDTOResponse;
-import com.csci318.microservice.cart.DTOs.CartItemDTOResponse;
 import com.csci318.microservice.cart.Domain.Entities.Cart;
-import com.csci318.microservice.cart.Domain.Entities.CartItem;
+import com.csci318.microservice.cart.Mappers.Mapper;
 
 import org.springframework.stereotype.Component;
 
@@ -42,18 +41,5 @@ public class CartMapper implements Mapper<Cart, CartDTOResponse, CartDTORequest>
     public List<Cart> toEntities(List<CartDTORequest> dtos) {
         return dtos.stream().map(this::toEntities).collect(Collectors.toList());
     }
-
-    // Helper method to convert CartItem entity to CartItemResponse
-    private CartItemDTOResponse convertCartItemToDto(CartItem cartItem) {
-        return new CartItemDTOResponse(
-                cartItem.getId(),
-                cartItem.getCartId(),
-                cartItem.getRestaurantId(),
-                cartItem.getItemId(),
-                cartItem.getQuantity(),
-                cartItem.getPrice()
-        );
-    }
-
 }
 

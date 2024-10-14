@@ -1,8 +1,9 @@
-package com.csci318.microservice.cart.Mappers;
+package com.csci318.microservice.cart.Mappers.Impl;
 
 import com.csci318.microservice.cart.DTOs.CartItemDTORequest;
 import com.csci318.microservice.cart.DTOs.CartItemDTOResponse;
 import com.csci318.microservice.cart.Domain.Entities.CartItem;
+import com.csci318.microservice.cart.Mappers.Mapper;
 
 import org.springframework.stereotype.Component;
 

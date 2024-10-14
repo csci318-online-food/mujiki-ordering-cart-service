@@ -1,10 +1,21 @@
 package com.csci318.microservice.cart.Domain.Entities;
 
-import jakarta.persistence.*;
+import com.csci318.microservice.cart.Domain.Relations.Restaurant;
+import com.csci318.microservice.cart.Domain.Relations.User;
+import com.csci318.microservice.cart.Utils.Annotations.ManyToOne;
+import com.csci318.microservice.cart.Utils.Annotations.OneToOne;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import java.util.UUID;
 
@@ -28,9 +39,11 @@ public class Cart {
     private UUID id;
 
     @Column(name = "user_id", unique = true)
+    @OneToOne(targetEntity = User.class)
     private UUID userId; // User ID reference
 
     @Column(name = "restaurant_id")
+    @ManyToOne(targetEntity = Restaurant.class)
     private UUID restaurantId; // Restaurant ID reference
 
     @Column(name = "total_price")

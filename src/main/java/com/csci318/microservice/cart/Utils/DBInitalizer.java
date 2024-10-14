@@ -15,8 +15,8 @@ public class DBInitalizer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-
-        // if (cartRepository.count() == 0) {
-        // }
+        if (cartRepository.count() == 0) {
+            // TODO: Seed some data
+        }
     }
 }
